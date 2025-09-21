@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Markdown Editor - Fixes v2</title>
+    <!-- Markdown parsing library -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Library for creating ZIP archives (used for export) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+      /* --- CSS Variables for Theming --- */
+      /* Defines colors and styles for the default light theme */
+      :root {
+          --bg-color: #f4f4f4; /* Overall background */
+          --text-color: #333; /* Default text color */
+          --controls-bg: #e0e0e0; /* Background for top control bar */
+          --controls-border: #ccc; /* Border color for controls */
+          --button-bg: #f0f0f0; /* Button background */
+          --button-hover-bg: #ddd; /* Button background on hover */
+          --button-border: #aaa; /* Button border */
+          --editor-bg: #fff; /* Background for the text editor area */
+          --preview-bg: #fff; /* Background for the markdown preview area */
+          --toolbar-bg: #f0f0f0; /* Background for the editor toolbar */
+          --toolbar-border: #ccc; /* Border for the editor toolbar */
+          --statusbar-bg: #f0f0f0; /* Background for the status bar below editor */
+          --statusbar-text: #555; /* Text color for the status bar */
+          --findbar-bg: #f8f8f8; /* Background for the find/replace bar */
+          --findbar-border: #ccc; /* Border for the find/replace bar */
+          --link-color: #007bff; /* Color for hyperlinks in preview */
+          --tag-bg: #f0f0f0; /* Background for tag buttons */
+          --tag-border: #ccc; /* Border for tag buttons */
+          --tag-active-bg: #4a90e2; /* Background for active/selected tag button */
+          --tag-active-color: #fff; /* Text color for active tag button */
+          --tag-active-border: #4a90e2; /* Border for active tag button */
+          --code-bg: #f0f0f0; /* Background for inline code snippets */
+          --pre-bg: #f0f0f0; /* Background for code blocks */
+          --blockquote-border: #ccc; /* Left border color for blockquotes */
+          --blockquote-color: #666; /* Text color for blockquotes */
+          --hr-color: #eee; /* Color for horizontal rules */
+          --search-result-bg: #fff; /* Background for individual search results */
+          --search-result-hover-bg: #f0f0f0; /* Background for search result on hover */
+          --search-result-border: #ddd; /* Border for search results */
+          --menu-bg: #f9f9f9; /* Background for dropdown menu */
+          --menu-border: #ccc; /* Border for dropdown menu */
+          --menu-hover-bg: #e0e0e0; /* Background for menu item on hover */
+          --placeholder-color: #888; /* Color for input placeholders */
+          --icon-color: #666; /* Default color for icons (like close buttons) */
+          --icon-hover-color: #000; /* Color for icons on hover */
+          --preview-bg-rgb: 255, 255, 255; /* RGB version for use in rgba() */
+      }
+
+      /* Defines overrides for the dark theme */
+      body.dark-mode {
+          --bg-color: #2d2d2d;
+          --text-color: #ccc;
+          --controls-bg: #3a3a3a;
+          --controls-border: #555;
+          --button-bg: #4a4a4a;
+          --button-hover-bg: #5a5a5a;
+          --button-border: #666;
+          --editor-bg: #282828;
+          --preview-bg: #2b2b2b;
+          --toolbar-bg: #3a3a3a;
+          --toolbar-border: #555;
+          --statusbar-bg: #3a3a3a;
+          --statusbar-text: #aaa;
+          --findbar-bg: #3f3f3f;
+          --findbar-border: #555;
+          --link-color: #5a9ee2;
+          --tag-bg: #4a4a4a;
+          --tag-border: #666;
+          --tag-active-bg: #5a9ee2;
+          --tag-active-color: #fff;
+          --tag-active-border: #5a9ee2;
+          --code-bg: #3a3a3a;
+          --pre-bg: #3a3a3a;
+          --blockquote-border: #555;
+          --blockquote-color: #aaa;
+          --hr-color: #444;
+          --search-result-bg: #353535;
+          --search-result-hover-bg: #454545;
+          --search-result-border: #555;
+          --menu-bg: #404040;
+          --menu-border: #555;
+          --menu-hover-bg: #505050;
+          --placeholder-color: #777;
+          --icon-color: #aaa;
+          --icon-hover-color: #eee;
+          --preview-bg-rgb: 43, 43, 43; /* RGB version for use in rgba() */
+          --dark-mode-invert: 1; /* Used to invert checkbox color in dark mode */
+      }
+      /* --- End Theming --- */
+
+      /* --- Basic Layout & Body --- */
+      html, body { height: 100%; margin: 0; overflow: hidden; /* Prevent scrolling on body */ }
+      body {
+	  font-family: sans-serif;
+	  display: flex;
+	  flex-direction: column;
+	  background-color: var(--bg-color);
+	  color: var(--text-color);
+	  position: relative; /* Needed for absolute positioning contexts */
+      }
+
+      /* --- Top Controls Bar --- */
+      .controls {
+	  padding: 8px 10px;
+	  background-color: var(--controls-bg);
+	  border-bottom: 1px solid var(--controls-border);
+	  display: flex;
+	  align-items: center;
+	  gap: 8px;
+	  flex-wrap: wrap; /* Allow wrapping on small screens */
+	  flex-shrink: 0; /* Prevent shrinking */
+	  position: relative;
+	  z-index: 10; /* Ensure it's above main content */
+	  }
+	   .controls button, .controls select, .controls input[type="search"] { padding: 6px 10px; cursor: pointer; border: 1px solid var(--button-border); border-radius: 4px; background-color: var(--button-bg); color: var(--text-color); font-size: 13px; white-space: nowrap; /* Prevent button text wrapping */ }
+	   .controls button:hover, .controls input[type="search"]:hover, .controls select:hover { background-color: var(--button-hover-bg); }
+	   .controls label { margin-left: 3px; font-weight: bold; white-space: nowrap; font-size: 13px; }
+	   /* --- Main Application Container (Sidebar + Main Content) --- */
+	   #appContainer { display: flex; flex-grow: 1; /* Take remaining vertical space */ overflow: hidden; /* Prevent content overflow */ position: relative; }
+
+	   /* --- Main Content Area (Tabs, Editor, Preview) --- */
+	   #mainContent { flex-grow: 1; /* Take remaining horizontal space */ display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 1; }
+
+	   /* Editor Toolbar Styles */
+	   #editorToolbar { padding: 5px 10px; background-color: var(--toolbar-bg); border-bottom: 1px solid var(--toolbar-border); flex-shrink: 0; user-select: none; /* Prevent text selection */ }
+	   #editorToolbar button { font-family: Arial, sans-serif; font-weight: bold; font-size: 14px; padding: 3px 8px; margin-right: 5px; cursor: pointer; border: 1px solid var(--button-border); background-color: var(--button-bg); color: var(--text-color); border-radius: 3px; min-width: 25px; text-align: center; vertical-align: middle; }
+	   #editorToolbar button:hover { background-color: var(--button-hover-bg); border-color: #aaa; }
+	   #editorToolbar .heading-btn { font-size: 12px; }
+
+	   /* Editor/Preview Container Styles */
+	   .container { display: flex; flex-grow: 1; /* Take remaining vertical space */ overflow: hidden; z-index: 0; background-color: var(--editor-bg); }
+	   #editorContainer { display: flex; flex-direction: column; /* Stack editor and status bar */ flex-basis: 50%; /* Default width */ flex-shrink: 1; flex-grow: 1; min-width: 100px; /* Minimum resize width */ height: 100%; overflow: hidden; background-color: var(--editor-bg); }
+	   #editor { flex-grow: 1; /* Take available space in editorContainer */ border: none; resize: none; /* Disable manual textarea resize */ font-family: monospace; background-color: var(--editor-bg); color: var(--text-color); outline: none; /* Remove focus outline */ height: auto; width: 100%; padding: 15px; box-sizing: border-box; overflow-y: auto; font-size: 14px; line-height: 1.6; }
+	   #statusBar { padding: 3px 10px; font-size: 11px; color: var(--statusbar-text); background-color: var(--statusbar-bg); border-top: 1px solid var(--controls-border); text-align: right; flex-shrink: 0; /* Prevent shrinking */ white-space: nowrap; }
+	   #preview { flex-basis: 50%; /* Default width */ flex-shrink: 1; flex-grow: 1; background-color: var(--preview-bg); color: var(--text-color); min-width: 100px; /* Minimum resize width */ height: 100%; padding: 15px; box-sizing: border-box; overflow-y: auto; font-size: 14px; line-height: 1.6; border-left: none;}
+
+	   /* --- Markdown Preview Specific Styles --- */
+	   #preview h1, #preview h2, #preview h3, #preview h4, #preview h5, #preview h6 { margin-top: 1em; margin-bottom: 0.5em; border-bottom: 1px solid var(--hr-color); padding-bottom: 0.3em; }
+	   #preview h1 { font-size: 2em; }
+	   #preview h2 { font-size: 1.5em; }
+	   #preview h3 { font-size: 1.25em; }
+	   #preview code { background-color: var(--code-bg); padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+	   #preview pre { background-color: var(--pre-bg); padding: 10px; border-radius: 4px; overflow-x: auto; color: var(--text-color); }
+	   #preview pre code { background-color: transparent; padding: 0; } /* Reset code style inside pre */
+	   #preview blockquote { border-left: 4px solid var(--blockquote-border); padding-left: 10px; color: var(--blockquote-color); margin-left: 0; }
+	   #preview ul, #preview ol { padding-left: 20px; }
+	   /* GitHub-style Task Lists */
+	   #preview .task-list-item { list-style-type: none; margin-left: -1.2em; /* Adjust positioning */ }
+	   #preview .task-list-item input[type="checkbox"] { margin-right: 0.5em; filter: invert(var(--dark-mode-invert, 0)); /* Invert checkbox color in dark mode */ }
+	   #preview table { border-collapse: collapse; width: auto; }
+	   #preview th, #preview td { border: 1px solid var(--tab-border); padding: 6px 13px; }
+	   #preview th { font-weight: bold; background-color: var(--button-bg); }
+	   #preview img { max-width: 100%; background-color: white; /* Ensure images with transparency look ok */ }
+	   #preview hr { border: 0; border-top: 1px solid var(--hr-color); margin: 1em 0; }
+	   #preview a { color: var(--link-color); }
+    </style>
+  </head>
+  <body>
+    <!-- Top Control Bar: Contains main actions like menu, open, close, switch, search, theme -->
+    <div class="controls">
+      <!-- Other Top Controls -->
+      <button id="openBtn">Open File</button> <!-- Opens single file -->
+      <button id="themeToggleBtn" title="Toggle Light/Dark Theme">🎨</button> <!-- Theme toggle button -->
+      <button id="previewBtn" title="show markdown preview as innerHTML">Preview</button> <!-- Preview toggle button -->
+    </div>
+
+    <!-- Main Application Area: Contains Sidebar and Main Content Side-by-Side -->
+    <div id="appContainer">
+      <!-- Main Content Area: Contains Tabs, Editor Toolbar, Find/Replace, Editor, Preview -->
+      <div id="mainContent">
+        <!-- Editor Toolbar: Buttons for Markdown formatting -->
+        <div id="editorToolbar">
+          <button id="toolbarH1" class="heading-btn" title="Heading 1">H1</button>
+          <button id="toolbarH2" class="heading-btn" title="Heading 2">H2</button>
+          <button id="toolbarH3" class="heading-btn" title="Heading 3">H3</button>
+          <button id="toolbarBold" title="Bold (Ctrl+B)">B</button>
+          <button id="toolbarItalic" title="Italic (Ctrl+I)">I</button>
+          <button id="toolbarBlockquote" title="Blockquote">></button>
+          <button id="toolbarLink" title="Link">Link</button>
+          <button id="toolbarCode" title="Code">`</button>
+          <button id="toolbarListUl" title="Bullet List">-</button>
+          <button id="toolbarListOl" title="Numbered List">1.</button>
+          <button id="toolbarTaskList" title="Task List">✓</button>
+          <button id="toolbarHr" title="Horizontal Rule">—</button>
+        </div>
+        <!-- Container for Editor and Preview Panes-->
+        <div class="container">
+          <!-- Editor Pane: Contains the textarea and status bar -->
+          <div id="editorContainer">
+            <!-- The main Markdown text editing area -->
+            <textarea id="editor" spellcheck="false"></textarea>
+            <!-- Status Bar: Shows word and character counts -->
+            <div id="statusBar">
+              <span id="wordCount">Words: 0</span> | <span id="charCount">Chars: 0</span>
+            </div>
+          </div>
+          <!-- Preview Pane: Displays the rendered HTML from Markdown -->
+          <div id="preview"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden File Input: Used for triggering file open/import dialogs -->
+    <input type="file" id="fileInput" accept=".md,.txt" style="display: none;">
+
+    <script>
+      // --- DOM References ---
+      // Get references to all the important HTML elements to interact with them in JS
+      const editor = document.getElementById('editor');
+      const preview = document.getElementById('preview');
+      const openBtn = document.getElementById('openBtn'); // For single file open
+      const closeNoteBtn = document.getElementById('closeNoteBtn'); // Top control bar button
+      const previewBtn = document.getElementById('previewBtn'); // show preview block or not
+      const fileInput = document.getElementById('fileInput'); // Hidden input for file selection
+      const tagListContainer = document.getElementById('tagList'); // Div to hold tag buttons
+      const clearTagFilterBtn = document.getElementById('clearTagFilterBtn'); // Button to clear active tag filter
+      const themeToggleBtn = document.getElementById('themeToggleBtn'); // Theme toggle in controls
+      const container = document.querySelector('.container'); // Container holding editor/preview
+      const editorContainer = document.getElementById('editorContainer'); // Div containing editor + status bar
+      const editorToolbar = document.getElementById('editorToolbar'); // Toolbar above the editor
+      const wordCountSpan = document.getElementById('wordCount'); // Span in status bar for word count
+      const charCountSpan = document.getElementById('charCount'); // Span in status bar for char count
+
+      // --- State Variables ---
+      // These variables hold the application's current state
+      let mdContent = ""; // the markdown content
+      let unsavedChanges = false; // Flag to track if the current note has changes not saved to a file (used for beforeunload warning)
+      let currentTheme = 'dark'; // Tracks the current theme ('light' or 'dark')
+      let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
+
+
+      // --- Library Configuration ---
+      // Configure the 'marked' library for Markdown parsing
+      marked.setOptions({
+          breaks: false,       // Interpret carriage returns as <br> tags (GFM style)
+          gfm: false,          // Enable GitHub Flavored Markdown extensions
+          pedantic: true,    // Don't be strict about parsing ambiguities
+          smartLists: false,   // Use smarter list behavior than original markdown
+          smartypants: false // Don't automatically convert quotes/dashes to smart entities
+      });
+
+      // --- Core Helper Functions ---
+      /**
+       * Updates the preview pane by parsing the editor's content using 'marked'.
+       * Handles potential parsing errors.
+       */
+      function updatePreview() {
+          if (editor.value != "") { // Only update if a note is active
+              const contentToRender = editor.value; // Get current editor content
+              try {
+                  preview.innerHTML = marked.parse(contentToRender); // Parse and set HTML
+                  // Add checkbox functionality after render (needs revisiting if checkboxes become interactive)
+                  // preview.querySelectorAll('.task-list-item input[type="checkbox"]').forEach(checkbox => { checkbox.disabled = false; /* Or add event listeners */ });
+              } catch(e){
+                  console.error("Markdown Parsing Error:", e);
+                  preview.innerHTML = "<p>Error parsing Markdown.</p>"; // Show error in preview
+              }
+          } else {
+              preview.innerHTML = ''; // Clear preview if no note is active
+          }
+      }
+
+      /**
+       * Updates the status bar with the current word and character counts from the editor.
+       */
+      function updateStatusBar() {
+          const content = editor.value;
+          const charCount = content.length;
+          // Basic word count: split by whitespace, filter empty strings
+          const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
+          charCountSpan.textContent = `Chars: ${charCount}`;
+          wordCountSpan.textContent = `Words: ${wordCount}`;
+      }
+
+      /**
+       * Sets the unsavedChanges flag
+       * @param {boolean} hasUnsaved - Whether there are unsaved changes.
+       * @param {boolean} [updateTimestamp=true] - Whether to update the note's updatedAt timestamp.
+       */
+      function setUnsavedChanges(hasUnsaved) {
+          if (unsavedChanges !== hasUnsaved) {
+              unsavedChanges = hasUnsaved;
+              // Potentially update window title or show indicator later
+          }
+      }
+      
+      // --- UI Rendering Functions ---
+      
+      /**
+       * Calls all necessary rendering functions to update the entire UI.
+       * Includes error handling for each sub-render function.
+       */
+      function renderUI() {
+          try { updateStatusBar(); } catch(e){ console.error("Error in updateStatusBar:", e); }
+          // updatePreview() is usually called separately after content changes or tab switches
+      }
+
+      // --- Note Management Functions ---
+
+      /**
+       * Adds a new note
+       * Generates a unique name if none is provided.
+       * @param {string|null} [name=null] - The desired name for the note. If null, generates "Untitled X".
+       * @param {string} [content=''] - The initial content for the note.
+       * @returns {number} The ID of the newly created note.
+       */
+      function addNote(content = '') {
+	  editor.value = '';
+          preview.innerHTML = '';
+	  mdContent = content;
+	  renderUI();
+          saveStateToLocalStorage();
+          setUnsavedChanges(true);
+      }
+
+      function togglePreview() {
+	  if (preview.style.display !== "none") {
+	      preview.style.display = "none";
+	  } else {
+	      preview.style.display = "block";
+	  }
+      }
+
+      // --- Import / Export ---
+
+      /**
+       * Triggers the hidden file input to allow opening a single Markdown/text file.
+       * (Used by the 'Open File...' button).
+       */
+      function openSingleFile() {
+          fileInput.value = null; // Clear previous selection
+          fileInput.click();
+      }
+
+      /**
+       * Handles the 'change' event of the hidden file input. Reads selected files
+       * as text and adds them as new note or prompts to replace existing ones.
+       * @param {Event} event - The file input change event.
+       */
+      function handleFileOpen(event) {
+          const files = event.target.files;
+          if (!files || files.length === 0) {
+              return;
+          }
+
+          firstAddedNoteIdDuringImport = null; // Reset tracker for which note to activate
+          let notesProcessed = 0; // Counter for async operations
+          setUnsavedChanges(true); // Importing potentially changes state
+
+          // Process each selected file
+          Array.from(files).forEach((file, index) => {
+              const reader = new FileReader();
+              const fileCreationTime = file.lastModified; // Use file's last modified time
+
+              // Define what happens when file is successfully read
+              reader.onload = (e) => {
+                  const content = e.target.result; // File content as text
+                  // If note doesn't exist, add it as a new note
+                  addNote(content);
+	      }
+
+              renderUI();
+              saveStateToLocalStorage();
+
+              // Define what happens on file reading error
+              reader.onerror = (e) => {
+                  console.error("Error reading file:", file.name, e);
+                  alert("Error reading file: " + file.name);
+                  notesProcessed++; // Increment counter even on error to finish the process
+                  // Check if this was the last file, similar to onload
+                  if (!(notesProcessed === files.length && firstAddedNoteIdDuringImport !== null) &&  (notesProcessed === files.length)) {
+                      renderUI();
+                      saveStateToLocalStorage();
+                  }
+              };
+
+              // Start reading the file as text
+              reader.readAsText(file);
+          });
+      }
+
+      // --- Markdown Toolbar Logic ---
+
+      /**
+       * Applies Markdown formatting syntax around the selected text in the editor,
+       * or inserts the syntax with a placeholder if no text is selected.
+       * @param {string} syntaxStart - The Markdown syntax to add before the selection (e.g., '**', '# ').
+       * @param {string|null} [syntaxEnd=null] - The syntax to add after the selection (e.g., '**'). If null, uses syntaxStart.
+       * @param {string} [placeholder='text'] - Placeholder text to insert if nothing is selected.
+       * @param {boolean} [isBlock=false] - If true, ensures the syntax starts on a new line. Special handling for '---'.
+       */
+      function applyMarkdownFormatting(syntaxStart, syntaxEnd = null, placeholder = 'text', isBlock = false) {
+          const start = editor.selectionStart; // Start position of selection
+          const end = editor.selectionEnd; // End position of selection
+          const selectedText = editor.value.substring(start, end); // The actual selected text
+
+          let textToInsert = '';
+          let finalSelectionStart = start; // Will be updated to place cursor/selection correctly
+          let finalSelectionEnd = end;
+
+          // If syntaxEnd is not provided, assume it's the same as syntaxStart (e.g., for *, **, `)
+          syntaxEnd = syntaxEnd ?? syntaxStart;
+
+          let prefix = ''; // Characters to add before the start syntax (e.g., newline)
+          let suffix = ''; // Characters to add after the end syntax (rarely needed)
+
+          // Ensure block elements (like headings, lists, hr, blockquote) start on a new line
+          if (isBlock && start !== 0 && editor.value[start - 1] !== '\n') {
+              prefix = '\n'; // Add a newline if not already at the start of a line
+          }
+
+          // Special handling for Horizontal Rule (---)
+          if (syntaxStart === '---') {
+              // Ensure HR is on its own line, potentially surrounded by blank lines
+              prefix = (start !== 0 && editor.value[start - 1] !== '\n') ? '\n\n' // Needs two newlines if previous char exists and isn't newline
+                  : (start !== 0 && editor.value[start-1] === '\n' ? '\n'      // Needs one newline if previous char is newline
+                     : '');                                                         // Needs no newline if at start of editor
+              syntaxStart = `${prefix}---\n`; // Add prefix and required newline after ---
+              syntaxEnd = ''; // No ending syntax for HR
+              placeholder = ''; // No placeholder for HR
+              textToInsert = syntaxStart;
+              // Place cursor after the inserted HR
+              finalSelectionStart = start + syntaxStart.length;
+              finalSelectionEnd = finalSelectionStart;
+          }
+          // Handling for when text IS selected
+          else if (selectedText) {
+              textToInsert = `${prefix}${syntaxStart}${selectedText}${syntaxEnd}${suffix}`;
+              // Place cursor after the inserted text (no selection)
+              // finalSelectionStart = start + textToInsert.length;
+              // finalSelectionEnd = finalSelectionStart;
+              // Or re-select the original text within the new syntax (usually better)
+              finalSelectionStart = start + prefix.length + syntaxStart.length;
+              finalSelectionEnd = finalSelectionStart + selectedText.length;
+          }
+          // Handling for when NO text is selected
+          else {
+              textToInsert = `${prefix}${syntaxStart}${placeholder}${syntaxEnd}${suffix}`;
+              // Place the cursor inside the syntax, selecting the placeholder
+              finalSelectionStart = start + prefix.length + syntaxStart.length;
+              finalSelectionEnd = finalSelectionStart + placeholder.length;
+          }
+
+          // Use setRangeText for better undo/redo support than manipulating editor.value directly
+          editor.setRangeText(textToInsert, start, end, 'end'); // Replace selection (or insert)
+
+          // Adjust selection after insertion
+          if (!selectedText && placeholder && syntaxStart !== '---') {
+              // If no text was selected initially and we inserted a placeholder, select the placeholder
+              editor.setSelectionRange(finalSelectionStart, finalSelectionEnd);
+          } else if (selectedText && syntaxStart !== '---') {
+              // If text was selected, keep it selected within the new syntax
+              // This happens automatically with 'end' in setRangeText if syntaxEnd is empty,
+              // but needs explicit setting if syntaxEnd exists. Let's be explicit.
+              editor.setSelectionRange(finalSelectionStart, finalSelectionEnd);
+          } else {
+              // Otherwise (like HR or after replacing selected text), just place the cursor at the end
+              editor.setSelectionRange(editor.selectionEnd, editor.selectionEnd);
+          }
+
+
+          editor.focus(); // Return focus to the editor
+          updatePreview(); // Update the preview pane
+          setUnsavedChanges(true, true); // Mark changes and update timestamp
+          updateStatusBar(); // Update word/char count
+      }
+
+
+      // --- Editor Auto Behaviors (Auto Pair, Auto List) ---
+      const pairMap = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '`': '`' };
+      const listMarkers = ['- ', '* ', '+ ']; // Common markdown list markers
+
+      /**
+       * Handles keydown events in the editor for auto-pairing characters
+       * and continuing lists on Enter.
+       * @param {KeyboardEvent} event - The keydown event.
+       */
+      function handleEditorKeyDown(event) {
+          const key = event.key;
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+
+          // --- Auto-Pairing ---
+          // If the pressed key is an opening character in our pairMap
+          if (Object.keys(pairMap).includes(key)) {
+              event.preventDefault(); // Prevent default character insertion
+              const selectedText = editor.value.substring(start, end); // Get currently selected text
+              const closingChar = pairMap[key]; // Get the corresponding closing character
+
+              // Construct text to insert: opening_char + selected_text + closing_char
+              const textToInsert = `${key}${selectedText}${closingChar}`;
+              // Insert the text, replacing the selection if any
+              editor.setRangeText(textToInsert, start, end, 'end');
+
+              if (selectedText) {
+                  // If text was selected, re-select it inside the pairs
+                  editor.setSelectionRange(start + 1, start + 1 + selectedText.length);
+              } else {
+                  // If no text was selected, place cursor between the pairs
+                  editor.setSelectionRange(start + 1, start + 1);
+              }
+              updatePreview(); // Update preview
+              setUnsavedChanges(true); // Mark changes
+              updateStatusBar(); // Update counts
+              return; // Stop further processing for this keydown
+          }
+
+          // --- Auto-List Continuation (Enter key) ---
+          if (key === 'Enter') {
+              // Find the start of the current line
+              const currentLineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+              // Get the content of the current line up to the cursor
+              const currentLine = editor.value.substring(currentLineStart, start);
+              const trimmedLine = currentLine.trimStart(); // Line content without leading whitespace
+
+              let listPrefix = null; // Stores the list marker and indentation (e.g., "  - ")
+              let isEmptyListItem = false; // Flag if the current list item is empty
+
+              // Check for Unordered List Markers ('-', '*', '+')
+              for (const marker of listMarkers) {
+                  if (trimmedLine.startsWith(marker)) {
+                      // Get leading whitespace + marker
+                      listPrefix = currentLine.match(/^\s*/)[0] + marker;
+                      // Check if the line only contains the marker (and whitespace)
+                      isEmptyListItem = trimmedLine.length === marker.length;
+                      break; // Found marker, stop checking
+                  }
+              }
+
+              // Check for Ordered List Markers ('1.', '2.', etc.) if no unordered marker found
+              if (!listPrefix) {
+                  const orderedMatch = trimmedLine.match(/^(\d+)\.\s+/); // Match digits, period, space
+                  if (orderedMatch) {
+                      const currentNum = parseInt(orderedMatch[1], 10); // Get current number
+                      const indentation = currentLine.match(/^\s*/)[0]; // Get leading whitespace
+                      // Create prefix for the next item, incrementing the number
+                      listPrefix = `${indentation}${currentNum + 1}. `;
+                      // Check if the line only contains the marker (e.g., "1. ")
+                      isEmptyListItem = trimmedLine.length === orderedMatch[0].length;
+                  }
+              }
+
+              // Check for Task List Markers ('- [ ]', '* [x]', etc.) if other lists not found
+              if (!listPrefix) {
+                  // Match '-', '*', or '+' followed by space, '[', space or x, ']', space
+                  const taskMatch = trimmedLine.match(/^(-|\*|\+)\s+\[( |x)\]\s+/i);
+                  if(taskMatch){
+                      const indentation = currentLine.match(/^\s*/)[0]; // Get indentation
+                      // Create prefix for the next task item (always unchecked)
+                      listPrefix = `${indentation}${taskMatch[1]} [ ] `; // taskMatch[1] is the list marker '-', '*', or '+'
+                      // Check if the line only contains the task marker
+                      isEmptyListItem = trimmedLine.length === taskMatch[0].length;
+                  }
+              }
+
+
+              // If we found a list marker on the current line
+              if (listPrefix) {
+                  event.preventDefault(); // Prevent default Enter behavior (just inserting newline)
+
+                  if (isEmptyListItem) {
+                      // If the current list item is empty, pressing Enter should remove it
+                      // and de-indent (effectively ending the list or moving up a level)
+                      // Select the current list item line (marker + whitespace)
+                      editor.setSelectionRange(currentLineStart, start);
+                      // Replace it with an empty string
+                      editor.setRangeText('', currentLineStart, start, 'end');
+                      // Insert the newline after the removed list item
+                      editor.setRangeText('\n', editor.selectionStart, editor.selectionStart, 'end');
+                      // TODO: De-indentation logic could be added here if needed
+                  } else {
+                      // If the current list item is not empty, continue the list
+                      // Insert a newline followed by the calculated list prefix
+                      editor.setRangeText(`\n${listPrefix}`, start, end, 'end');
+                  }
+
+                  updatePreview();
+                  setUnsavedChanges(true);
+                  updateStatusBar();
+                  return; // Stop further processing for Enter key
+              }
+          }
+      }
+
+      // --- Theme Logic ---
+
+      /**
+       * Applies the specified theme (light or dark) by adding/removing the 'dark-mode' class to the body.
+       * @param {'light' | 'dark'} theme - The theme to apply.
+       */
+      function applyTheme(theme) {
+          currentTheme = theme; // Update state variable
+          if (theme === 'dark') {
+              document.body.classList.add('dark-mode');
+          } else {
+              document.body.classList.remove('dark-mode');
+          }
+          // Update the --preview-bg-rgb variable used for the search overlay background
+          const bodyStyles = getComputedStyle(document.body);
+          const previewBg = bodyStyles.getPropertyValue('--preview-bg').trim();
+          // This conversion is basic, might fail for complex color values (hsl, etc.)
+          // A more robust solution might involve setting --preview-bg-rgb directly in CSS
+          try {
+              // Simple check for hex/rgb
+              if (previewBg.startsWith('#')) {
+                  const r = parseInt(previewBg.slice(1, 3), 16);
+                  const g = parseInt(previewBg.slice(3, 5), 16);
+                  const b = parseInt(previewBg.slice(5, 7), 16);
+                  document.documentElement.style.setProperty('--preview-bg-rgb', `${r}, ${g}, ${b}`);
+              } else if (previewBg.startsWith('rgb')) {
+                  const rgbValues = previewBg.match(/\d+/g);
+                  if (rgbValues && rgbValues.length >= 3) {
+                      document.documentElement.style.setProperty('--preview-bg-rgb', `${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}`);
+                  }
+              } else { // Fallback to default light/dark values
+                  document.documentElement.style.setProperty('--preview-bg-rgb', theme === 'dark' ? '43, 43, 43' : '255, 255, 255');
+              }
+          } catch (e) {
+              console.error("Error setting preview-bg-rgb:", e);
+              document.documentElement.style.setProperty('--preview-bg-rgb', theme === 'dark' ? '43, 43, 43' : '255, 255, 255');
+          }
+      }
+
+      /**
+       * Toggles the theme between light and dark and saves the preference.
+       */
+      function toggleTheme() {
+          const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+          applyTheme(newTheme);
+          saveStateToLocalStorage(); // Persist theme preference
+      }
+
+
+      // --- Local Storage Persistence ---
+      // Key used to store the application state in browser's localStorage
+      const LS_KEY = 'browserMarkdownEditorState_randomize_custom_edition_v1'; // Increment version if state structure changes significantly
+
+      /**
+       * Saves the current application state (notes, active note ID, UI settings)
+       * to localStorage. Includes current editor content.
+       */
+      function saveStateToLocalStorage() {
+          let contentChanged = false;
+          if (editor.value != mdContent) {
+              mdContent = editor.value;
+              contentChanged = true;
+          }
+
+          // Construct the state object to save
+          const state = {
+              mdContent: mdContent,
+              // Persist editor/preview pane split ratio
+              editorPanePercent: parseFloat(editorContainer.style.flexBasis) || 50,
+              currentTheme: currentTheme // Selected theme
+              // activeFilterTag could also be saved if desired
+          };
+
+          try {
+              // Serialize the state object to JSON and save it
+              localStorage.setItem(LS_KEY, JSON.stringify(state));
+              if(contentChanged) {
+                  // Mark as "unsaved" conceptually meaning not saved *to file*, even though saved to localStorage
+                  setUnsavedChanges(true, false);
+              }
+              // console.log("State saved to localStorage"); // Optional debug log
+          } catch (e) {
+              // Handle potential errors (e.g., localStorage full)
+              console.error("Error saving state to localStorage:", e);
+              // Optionally notify the user
+              // alert("Warning: Could not save session data. LocalStorage might be full or disabled.");
+          }
+      }
+
+      /**
+       * Loads the application state from localStorage upon startup.
+       * Initializes the editor with the saved state or default values.
+       */
+      function loadStateFromLocalStorage() {
+          try {
+              const savedState = localStorage.getItem(LS_KEY); // Retrieve saved state string
+
+              if (savedState) {
+                  const state = JSON.parse(savedState); // Parse the JSON string
+		  mdContent = state.mdContent || "";
+                  currentTheme = state.currentTheme || 'dark';
+                  applyTheme(currentTheme); // Apply the loaded theme
+
+                  // Restore editor/preview pane split
+                  const editorPercent = state.editorPanePercent || 50;
+                  editorContainer.style.flexBasis = `${editorPercent}%`;
+                  preview.style.flexBasis = `${100 - editorPercent}%`;
+
+                  editor.value = mdContent;
+
+                  // Perform initial UI rendering based on loaded state
+                  renderUI();
+                  updatePreview();
+                  setUnsavedChanges(false); // Assume loaded state is "saved" initially
+                  console.log("Application state loaded from localStorage");
+
+              } else {
+                  // No saved state found - initialize with defaults
+                  applyTheme('dark'); // Default to light theme
+                  // Add a default welcome note for first-time users
+                  addNote("# Welcome to Browser Markdown Editor!\n\n*   Use the sidebar to manage notes.\n*   Use the toolbar or Markdown syntax to format text.\n*   Your notes are saved automatically in your browser's local storage.\n*   Use the Menu to import/export notes.");
+                  setUnsavedChanges(false); // Initial note is considered "saved"
+              }
+          } catch (e) {
+              console.error("Error loading state from localStorage:", e);
+              // Fallback to a clean state in case of error
+              applyTheme('dark');
+              // Add an error message note
+              addNote(`# Error Loading Previous Session\n\nThere was an error loading your saved notes:\n\n\`\`\`\n${e.message}\n\`\`\`\n\nStarting with a fresh session.`);
+              setUnsavedChanges(false);
+              renderUI();
+              updatePreview();
+          }
+      }
+
+
+      // --- Global Keydown Listener for Shortcuts ---
+
+      /**
+       * Handles global keydown events for application-wide shortcuts (like Ctrl+S, Ctrl+N).
+       * @param {KeyboardEvent} event - The keydown event.
+       */
+      function handleGlobalKeyDown(event) {
+          // Check if modifier key (Ctrl or Cmd on Mac) is pressed
+          const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+          const modKey = isMac ? event.metaKey : event.ctrlKey; // Use Meta key (Cmd) on Mac, Ctrl otherwise
+
+          let handled = false; // Flag to check if we handled the event
+
+          if (modKey) {
+              switch (event.key.toLowerCase()) {
+              case 's': // Ctrl+S or Cmd+S
+                  saveNote(); // Trigger file save
+                  handled = true;
+                  break;
+              case 'n': // Ctrl+N or Cmd+N
+                  addNote(); // Trigger add new note
+                  handled = true;
+                  break;
+              case 'b': // Ctrl+B or Cmd+B (Bold)
+                  // Only apply formatting if the editor has focus
+                  if (document.activeElement === editor) {
+                      applyMarkdownFormatting('**');
+                      handled = true;
+                  }
+                  break;
+              case 'i': // Ctrl+I or Cmd+I (Italic)
+                  if (document.activeElement === editor) {
+                      applyMarkdownFormatting('*');
+                      handled = true;
+                  }
+                  break;
+                  // Add more shortcuts as needed (e.g., Ctrl+Shift+S for Save As - not implemented)
+              }
+          }
+          // Could also use Escape to close search results or menu dropdown
+
+          // If we handled the event, prevent default browser behavior (e.g., browser save dialog on Ctrl+S)
+          if (handled) {
+              event.preventDefault();
+          }
+      }
+
+
+      // --- Event Listeners Setup ---
+      // Assign functions to UI element events
+
+      // Editor Events
+      editor.addEventListener('input', () => { // Fired when content changes
+          updatePreview(); // Update Markdown preview
+          updateStatusBar(); // Update word/char counts
+          setUnsavedChanges(true, true); // Mark changes as unsaved and update timestamp
+          // Debounced auto-save to localStorage after a short delay of inactivity
+          clearTimeout(autoSaveTimer); // Clear previous timer
+          autoSaveTimer = setTimeout(() => {
+              saveStateToLocalStorage();
+              console.log("Auto-saved state to localStorage."); // Optional log
+          }, 2000); // Auto-save after 2 seconds of inactivity
+      });
+      editor.addEventListener('keydown', handleEditorKeyDown); // Handle auto-pair, auto-list, etc.
+
+      // Editor Toolbar Button Clicks (delegated to the toolbar element)
+      editorToolbar.addEventListener('click', (e) => {
+          const target = e.target;
+          // Check if the clicked element is a button inside the toolbar
+          if (target.tagName === 'BUTTON' && target.closest('#editorToolbar')) {
+              // Call formatting function based on button ID
+              switch (target.id) {
+              case 'toolbarH1': applyMarkdownFormatting('# ', '', 'Heading 1', true); break;
+              case 'toolbarH2': applyMarkdownFormatting('## ', '', 'Heading 2', true); break;
+              case 'toolbarH3': applyMarkdownFormatting('### ', '', 'Heading 3', true); break;
+              case 'toolbarBold': applyMarkdownFormatting('**'); break;
+              case 'toolbarItalic': applyMarkdownFormatting('*'); break;
+              case 'toolbarBlockquote': applyMarkdownFormatting('> ', '', 'Quote text', true); break;
+              case 'toolbarLink': applyMarkdownFormatting('[', '](url)', 'link text'); break;
+              case 'toolbarCode': applyMarkdownFormatting('`'); break;
+              case 'toolbarListUl': applyMarkdownFormatting('- ', '', 'List item', true); break;
+              case 'toolbarListOl': applyMarkdownFormatting('1. ', '', 'List item', true); break;
+              case 'toolbarTaskList': applyMarkdownFormatting('- [ ] ', '', 'Task item', true); break;
+              case 'toolbarHr': applyMarkdownFormatting('---', '', '', true); break;
+              }
+          }
+      });
+
+      // Top Controls Bar Button Events
+      openBtn.addEventListener('click', openSingleFile); // Open single file button
+      fileInput.addEventListener('change', handleFileOpen); // Hidden file input change
+
+      // Theme Toggle Button (in controls)
+      themeToggleBtn.addEventListener('click', toggleTheme);
+
+      // Preview Toggle Button (in controls)
+      previewBtn.addEventListener('click', togglePreview);
+
+      // Window Events
+      // Warn user about unsaved changes before closing the tab/window
+      window.addEventListener('beforeunload', (event) => {
+          // Ensure latest state is saved before potentially showing the prompt
+          if (mdContent != "") {
+              clearTimeout(autoSaveTimer); // Cancel any pending auto-save
+              saveStateToLocalStorage(); // Save final state
+          }
+          // Check the unsavedChanges flag (set when editor content differs from last file save/load)
+          // Note: This flag might be true even if changes are saved to localStorage,
+          // it indicates changes *since the last file operation or load*.
+          // This behavior might need refinement based on desired UX.
+          if (unsavedChanges) {
+              // Standard way to trigger the browser's confirmation dialog
+              event.preventDefault(); // Required for Chrome
+              event.returnValue = 'You have unsaved changes. Are you sure you want to leave?'; // Required for older browsers
+              return 'You have unsaved changes. Are you sure you want to leave?'; // For modern browsers
+          }
+          // If no unsaved changes, allow navigation/closing without prompt
+      });
+
+      // Global Keydown Listener for Shortcuts
+      document.addEventListener('keydown', handleGlobalKeyDown);
+
+
+      // --- Initial Setup ---
+      // Load previous state from localStorage when the application starts
+      loadStateFromLocalStorage();
+
+      // Initial UI rendering and preview update happens inside loadStateFromLocalStorage
+      // or its fallback initial note creation.
+
+      // Ensure the theme is applied correctly based on the loaded state
+      // (applyTheme is called within loadStateFromLocalStorage)
+
+      console.log("Browser Markdown Editor Initialized.");
+
+    </script>
+
+  </body>
+</html>
