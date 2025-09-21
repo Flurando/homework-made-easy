@@ -29,9 +29,7 @@ You can try the editor live directly in your browser using GitHub Pages:
 
 ## Key Features
 
-*   **Live Markdown Preview:** Real-time split-pane view (Editor | Preview) using [marked.js](https://marked.js.org/).
-*   **File Management (Client-Side):**
-    *   **Open** `.md` or `.txt` files.
+*   **Live Markdown Preview:** Real-time split-pane view (Editor | Preview) using [marked.js](https://marked.js.org/)
 *   **Editing Aids:**
     *   **Formatting Toolbar:** Quick buttons for Headings, Bold, Italic, Lists, Links, Code, etc.
     *   **Auto-Pairing:** Automatically closes `()`, `[]`, `{}`, `""`, `''`, `` ` ``.
@@ -39,7 +37,7 @@ You can try the editor live directly in your browser using GitHub Pages:
 *   **Session Persistence:** Your notes, content, settings (theme, pane size, sidebar state, sort order) are automatically saved to your browser's `localStorage`. Reopen the `.html` file, and your session should be restored.
 *   **Light/Dark Theme:** Toggle between themes for comfort (preference is saved).
 *   **Status Bar:** Live word and character count for the current note.
-*   **Keyboard Shortcuts:** Basic shortcuts for Save (`Ctrl+S`), Bold (`Ctrl+B`), Italic (`Ctrl+I`).
+*   **Keyboard Shortcuts:** Basic shortcuts for Bold (`Ctrl+B`), Italic (`Ctrl+I`).
 
 ## How to Use
 

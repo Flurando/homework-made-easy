@@ -633,14 +633,6 @@
 
           if (modKey) {
               switch (event.key.toLowerCase()) {
-              case 's': // Ctrl+S or Cmd+S
-                  saveNote(); // Trigger file save
-                  handled = true;
-                  break;
-              case 'n': // Ctrl+N or Cmd+N
-                  addNote(); // Trigger add new note
-                  handled = true;
-                  break;
               case 'b': // Ctrl+B or Cmd+B (Bold)
                   // Only apply formatting if the editor has focus
                   if (document.activeElement === editor) {
