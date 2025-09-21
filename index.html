@@ -206,7 +206,6 @@
       // --- State Variables ---
       // These variables hold the application's current state
       let mdContent = ""; // the markdown content
-      let unsavedChanges = false; // Flag to track if the current note has changes not saved to a file (used for beforeunload warning)
       let currentTheme = 'dark'; // Tracks the current theme ('light' or 'dark')
       let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
 
@@ -253,18 +252,6 @@
           charCountSpan.textContent = `Chars: ${charCount}`;
           wordCountSpan.textContent = `Words: ${wordCount}`;
       }
-
-      /**
-       * Sets the unsavedChanges flag
-       * @param {boolean} hasUnsaved - Whether there are unsaved changes.
-       * @param {boolean} [updateTimestamp=true] - Whether to update the note's updatedAt timestamp.
-       */
-      function setUnsavedChanges(hasUnsaved) {
-          if (unsavedChanges !== hasUnsaved) {
-              unsavedChanges = hasUnsaved;
-              // Potentially update window title or show indicator later
-          }
-      }
       
       // --- UI Rendering Functions ---
       
@@ -292,7 +279,6 @@
 	  mdContent = content;
 	  renderUI();
           saveStateToLocalStorage();
-          setUnsavedChanges(true);
       }
 
       function togglePreview() {
@@ -327,7 +313,6 @@
 
           firstAddedNoteIdDuringImport = null; // Reset tracker for which note to activate
           let notesProcessed = 0; // Counter for async operations
-          setUnsavedChanges(true); // Importing potentially changes state
 
           // Process each selected file
           Array.from(files).forEach((file, index) => {
@@ -443,7 +428,6 @@
 
           editor.focus(); // Return focus to the editor
           updatePreview(); // Update the preview pane
-          setUnsavedChanges(true, true); // Mark changes and update timestamp
           updateStatusBar(); // Update word/char count
       }
 
@@ -482,7 +466,6 @@
                   editor.setSelectionRange(start + 1, start + 1);
               }
               updatePreview(); // Update preview
-              setUnsavedChanges(true); // Mark changes
               updateStatusBar(); // Update counts
               return; // Stop further processing for this keydown
           }
@@ -557,7 +540,6 @@
                   }
 
                   updatePreview();
-                  setUnsavedChanges(true);
                   updateStatusBar();
                   return; // Stop further processing for Enter key
               }
@@ -640,10 +622,6 @@
           try {
               // Serialize the state object to JSON and save it
               localStorage.setItem(LS_KEY, JSON.stringify(state));
-              if(contentChanged) {
-                  // Mark as "unsaved" conceptually meaning not saved *to file*, even though saved to localStorage
-                  setUnsavedChanges(true, false);
-              }
               // console.log("State saved to localStorage"); // Optional debug log
           } catch (e) {
               // Handle potential errors (e.g., localStorage full)
@@ -677,7 +655,6 @@
                   // Perform initial UI rendering based on loaded state
                   renderUI();
                   updatePreview();
-                  setUnsavedChanges(false); // Assume loaded state is "saved" initially
                   console.log("Application state loaded from localStorage");
 
               } else {
@@ -685,7 +662,6 @@
                   applyTheme('dark'); // Default to light theme
                   // Add a default welcome note for first-time users
                   addNote("# Welcome to Browser Markdown Editor!\n\n- Use the toolbar or Markdown syntax to format text.\n- Your notes are saved automatically in your browser's local storage.\n");
-                  setUnsavedChanges(false); // Initial note is considered "saved"
               }
           } catch (e) {
               console.error("Error loading state from localStorage:", e);
@@ -693,7 +669,6 @@
               applyTheme('dark');
               // Add an error message note
               addNote(`# Error Loading Previous Session\n\nThere was an error loading your saved notes:\n\n\`\`\`\n${e.message}\n\`\`\`\n\nStarting with a fresh session.`);
-              setUnsavedChanges(false);
               renderUI();
               updatePreview();
           }
@@ -755,7 +730,6 @@
       editor.addEventListener('input', () => { // Fired when content changes
           updatePreview(); // Update Markdown preview
           updateStatusBar(); // Update word/char counts
-          setUnsavedChanges(true, true); // Mark changes as unsaved and update timestamp
           // Debounced auto-save to localStorage after a short delay of inactivity
           clearTimeout(autoSaveTimer); // Clear previous timer
           autoSaveTimer = setTimeout(() => {
@@ -799,24 +773,12 @@
       previewBtn.addEventListener('click', togglePreview);
 
       // Window Events
-      // Warn user about unsaved changes before closing the tab/window
       window.addEventListener('beforeunload', (event) => {
           // Ensure latest state is saved before potentially showing the prompt
           if (mdContent != "") {
               clearTimeout(autoSaveTimer); // Cancel any pending auto-save
               saveStateToLocalStorage(); // Save final state
           }
-          // Check the unsavedChanges flag (set when editor content differs from last file save/load)
-          // Note: This flag might be true even if changes are saved to localStorage,
-          // it indicates changes *since the last file operation or load*.
-          // This behavior might need refinement based on desired UX.
-          if (unsavedChanges) {
-              // Standard way to trigger the browser's confirmation dialog
-              event.preventDefault(); // Required for Chrome
-              event.returnValue = 'You have unsaved changes. Are you sure you want to leave?'; // Required for older browsers
-              return 'You have unsaved changes. Are you sure you want to leave?'; // For modern browsers
-          }
-          // If no unsaved changes, allow navigation/closing without prompt
       });
 
       // Global Keydown Listener for Shortcuts
