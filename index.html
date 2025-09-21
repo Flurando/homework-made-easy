@@ -141,7 +141,6 @@
     <!-- Top Control Bar: Contains main actions like menu, open, close, switch, search, theme -->
     <div class="controls">
       <!-- Other Top Controls -->
-      <button id="openBtn">Open File</button> <!-- Opens single file -->
       <button id="themeToggleBtn" title="Toggle Light/Dark Theme">Light</button> <!-- Theme toggle button -->
       <button id="previewBtn" title="show markdown preview as innerHTML">Preview</button> <!-- Preview toggle button -->
     </div>
@@ -190,10 +189,8 @@
       // Get references to all the important HTML elements to interact with them in JS
       const editor = document.getElementById('editor');
       const preview = document.getElementById('preview');
-      const openBtn = document.getElementById('openBtn'); // For single file open
       const closeNoteBtn = document.getElementById('closeNoteBtn'); // Top control bar button
       const previewBtn = document.getElementById('previewBtn'); // show preview block or not
-      const fileInput = document.getElementById('fileInput'); // Hidden input for file selection
       const tagListContainer = document.getElementById('tagList'); // Div to hold tag buttons
       const clearTagFilterBtn = document.getElementById('clearTagFilterBtn'); // Button to clear active tag filter
       const themeToggleBtn = document.getElementById('themeToggleBtn'); // Theme toggle in controls
@@ -290,63 +287,6 @@
 	  } else {
 	      editorContainer.style.display = "flex";
 	  }
-      }
-
-      // --- Import / Export ---
-
-      /**
-       * Triggers the hidden file input to allow opening a single Markdown/text file.
-       * (Used by the 'Open File...' button).
-       */
-      function openSingleFile() {
-          fileInput.value = null; // Clear previous selection
-          fileInput.click();
-      }
-
-      /**
-       * Handles the 'change' event of the hidden file input. Reads selected files
-       * as text and adds them as new note or prompts to replace existing ones.
-       * @param {Event} event - The file input change event.
-       */
-      function handleFileOpen(event) {
-          const files = event.target.files;
-          if (!files || files.length === 0) {
-              return;
-          }
-
-          firstAddedNoteIdDuringImport = null; // Reset tracker for which note to activate
-          let notesProcessed = 0; // Counter for async operations
-
-          // Process each selected file
-          Array.from(files).forEach((file, index) => {
-              const reader = new FileReader();
-              const fileCreationTime = file.lastModified; // Use file's last modified time
-
-              // Define what happens when file is successfully read
-              reader.onload = (e) => {
-                  const content = e.target.result; // File content as text
-                  // If note doesn't exist, add it as a new note
-                  addNote(content);
-	      }
-
-              renderUI();
-              saveStateToLocalStorage();
-
-              // Define what happens on file reading error
-              reader.onerror = (e) => {
-                  console.error("Error reading file:", file.name, e);
-                  alert("Error reading file: " + file.name);
-                  notesProcessed++; // Increment counter even on error to finish the process
-                  // Check if this was the last file, similar to onload
-                  if (!(notesProcessed === files.length && firstAddedNoteIdDuringImport !== null) &&  (notesProcessed === files.length)) {
-                      renderUI();
-                      saveStateToLocalStorage();
-                  }
-              };
-
-              // Start reading the file as text
-              reader.readAsText(file);
-          });
       }
 
       // --- Markdown Toolbar Logic ---
@@ -764,10 +704,6 @@
               }
           }
       });
-
-      // Top Controls Bar Button Events
-      openBtn.addEventListener('click', openSingleFile); // Open single file button
-      fileInput.addEventListener('change', handleFileOpen); // Hidden file input change
 
       // Theme Toggle Button (in controls)
       themeToggleBtn.addEventListener('click', toggleTheme);
