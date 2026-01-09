@@ -9,6 +9,7 @@ const editorContainer = document.getElementById('editorContainer'); // Div conta
 const editorToolbar = document.getElementById('editorToolbar'); // Toolbar above the editor
 const wordCountSpan = document.getElementById('wordCount'); // Span in status bar for word count
 const charCountSpan = document.getElementById('charCount'); // Span in status bar for char count
+const exportPDF = document.getElementById('exportPDF'); // button to trigger download content as PDF
 
 // --- State Variables ---
 // These variables hold the application's current state
@@ -224,7 +225,7 @@ function handleEditorKeyDown(event) {
         // Find the start of the current line
         const currentLineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
         // Get the content of the current line up to the cursor
-        const currentLine = editor.value.substring(currentLineStart, start);
+        const currentLine = editor.value.substring(currenMathJax.typesettLineStart, start);
         const trimmedLine = currentLine.trimStart(); // Line content without leading whitespace
 
         let listPrefix = null; // Stores the list marker and indentation (e.g., "  - ")
@@ -460,6 +461,17 @@ function handleGlobalKeyDown(event) {
     if (handled) {event.preventDefault();}
 }
 
+// --- Export Options ---
+
+/**
+ * export to different formats
+ * currently only supports PDF
+ */
+function downloadAsPDF(event) {
+    MathJax.typeset(); // Is this obsolote? I don't know!
+    var element = document.getElementById('preview');
+    html2pdf(element);
+}
 
 // --- Event Listeners Setup ---
 // Assign functions to UI element events
@@ -505,6 +517,9 @@ themeToggleBtn.addEventListener('click', toggleTheme);
 
 // Preview Toggle Button (in controls)
 previewBtn.addEventListener('click', togglePreview);
+
+// Export (to PDF) Button (in controls)
+exportPDF.addEventListener('click', downloadAsPDF);
 
 // Window Events
 window.addEventListener('beforeunload', (event) => {
