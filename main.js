@@ -41,7 +41,7 @@ function updatePreview() {
         preview.innerHTML = ''; // Clear preview if no note is active
     }
     
-    MathJax.typeset();
+    MathJax.typesetPromise();
 }
 
 /**
