@@ -25,6 +25,8 @@ let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
  * Handles potential parsing errors.
  */
 function updatePreview() {
+    MathJax.typesetClear();
+    
     if (editor.value != "") { // Only update if a note is active
         const contentToRender = editor.value; // Get current editor content
         try {
@@ -38,6 +40,8 @@ function updatePreview() {
     } else {
         preview.innerHTML = ''; // Clear preview if no note is active
     }
+    
+    MathJax.typeset();
 }
 
 /**
