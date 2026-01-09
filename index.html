@@ -6,6 +6,14 @@
     <title>Homework Made Easy</title>
     <link rel="stylesheet" href="style.css">
     <script src="commonmark.js"></script>
+    <script>
+      MathJax = {
+	  tex: {
+	      inlineMath: {'[+]': [['$', '$']]}
+	  },
+	  processHtmlClass: 'mathjax_process'
+      };
+    </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
   </head>
   <body>
@@ -47,7 +55,7 @@
             </div>
           </div>
           <!-- Preview Pane: Displays the rendered HTML from Markdown -->
-          <div id="preview"></div>
+          <div id="preview" class="mathjax_process"></div>
         </div>
       </div>
     </div>
