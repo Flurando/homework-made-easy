@@ -10,6 +10,13 @@ const editorToolbar = document.getElementById('editorToolbar'); // Toolbar above
 const wordCountSpan = document.getElementById('wordCount'); // Span in status bar for word count
 const charCountSpan = document.getElementById('charCount'); // Span in status bar for char count
 const exportPDF = document.getElementById('exportPDF'); // button to trigger download content as PDF
+const saveFileAs = document.getElementById('saveFileAs'); // save current markdown to local PouchDB
+const openFileAs = document.getElementById('openFileAs'); // read a file from local PouchDB
+const syncFromRemote = document.getElementById('syncFromRemote'); // sync local PouchDB with remote CouchDB
+const syncToRemote = document.getElementById('syncToRemote'); // sync remote CouchDB with local PouchDB
+
+// --- Databse References ---
+const db = new PouchDB('default'); // our PouchDB instance
 
 // --- State Variables ---
 // These variables hold the application's current state
