@@ -428,7 +428,7 @@ function loadStateFromLocalStorage() {
             // No saved state found - initialize with defaults
             applyTheme('dark'); // Default to light theme
             // Add a default welcome note for first-time users
-            addNote("Welcome to **Homework Made Easy**,  \nthe *ultimate solution* for doing homework everywhere!\n\n- Use the toolbar or Markdown syntax to format text.\n- Your notes are saved automatically in your browser's local storage.\n- math formulas are allowed as well!\n\n  Like $e^{i\\theta}=\\cos\\theta+i\\sin\\theta$\n");
+            addNote("Welcome to **Homework Made Easy**,  \nthe *ultimate solution* for doing homework everywhere!\n\n- Use the toolbar or Markdown syntax to format text.\n- Your notes are saved automatically in your browser's local storage.\n- math formulas are allowed as well!\n  \n  Like $e^{i\\theta}=\\cos\\theta+i\\sin\\theta$\n");
         }
     } catch (e) {
         console.error("Error loading state from localStorage:", e);
