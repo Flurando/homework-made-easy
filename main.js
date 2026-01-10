@@ -65,6 +65,13 @@ function updateStatusBar() {
     wordCountSpan.textContent = `Words: ${wordCount}`;
 }
 
+/**
+ * Pop out a quest to rename current file
+ */
+function renameDocQuest() {
+    // 
+}
+
 // --- UI Rendering Functions ---
 
 /**
@@ -354,8 +361,11 @@ function toggleTheme() {
 // --- Local Database Persistence ---
 // similar to local storage, but not automatically synced, requiring manual care.
 function updateLocalDB() {
+    // save current editor.value as content to pouchDB along with the fileNameSpan.textContent as name
+    // if fileNameSpan.textContent is untitled, pop out a notification to rename it
 }
 function readFromLocalDB() {
+    // 
 }
 function pushToRemoteDB() {
 }
@@ -377,8 +387,10 @@ function saveStateToLocalStorage() {
         contentChanged = true;
     }
 
+    let fileName = (fileNameSpan.textContent === "untitled") ? renameDocQuest() : fileNameSpan.textContent;
     // Construct the state object to save
     const state = {
+	fileName: fileName,
         mdContent: mdContent,
         // Persist editor/preview pane split ratio
         editorPanePercent: parseFloat(editorContainer.style.flexBasis) || 50,
@@ -408,6 +420,7 @@ function loadStateFromLocalStorage() {
 
         if (savedState) {
             const state = JSON.parse(savedState); // Parse the JSON string
+	    fileName = state.fileName || "untitled";
 	    mdContent = state.mdContent || "";
             currentTheme = state.currentTheme || 'dark';
             applyTheme(currentTheme); // Apply the loaded theme
