@@ -8,7 +8,7 @@ If you are willing to write in markdown (for texts) and latex (for math formulas
 
 # Current state
 
-just started the fork, from a plain browser based markdown editor.
+can render homework in real time and download as PDF file, but lacking sync func across browsers.
 
 # License
 
