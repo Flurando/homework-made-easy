@@ -7,6 +7,7 @@ const themeToggleBtn = document.getElementById('themeToggleBtn'); // Theme toggl
 const container = document.querySelector('.container'); // Container holding editor/preview
 const editorContainer = document.getElementById('editorContainer'); // Div containing editor + status bar
 const editorToolbar = document.getElementById('editorToolbar'); // Toolbar above the editor
+const fileNameSpan = document.getElementById('fileName'); // Span in info bar for file name
 const wordCountSpan = document.getElementById('wordCount'); // Span in status bar for word count
 const charCountSpan = document.getElementById('charCount'); // Span in status bar for char count
 const exportPDF = document.getElementById('exportPDF'); // button to trigger download content as PDF
