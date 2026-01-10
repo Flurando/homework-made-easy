@@ -85,10 +85,8 @@ function renderUI() {
  * @returns {number} The ID of the newly created note.
  */
 function addNote(content = '') {
-    editor.value = '';
-    MathJax.typesetClear(); // this is required as suggested by mathjax, maybe...
-    preview.innerHTML = '';
-    mdContent = content;
+    editor.value = content;
+    updatePreview();
     renderUI();
     saveStateToLocalStorage();
 }
