@@ -189,7 +189,7 @@ function applyMarkdownFormatting(syntaxStart, syntaxEnd = null, placeholder = 't
 
 
 // --- Editor Auto Behaviors (Auto Pair, Auto List) ---
-const pairMap = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '`': '`' };
+const pairMap = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '`': '`', '$':'$'};
 const listMarkers = ['- ', '* ', '+ ']; // Common markdown list markers
 
 /**
