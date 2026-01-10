@@ -86,6 +86,7 @@ function renderUI() {
  */
 function addNote(content = '') {
     editor.value = '';
+    MathJax.typesetClear(); // this is required as suggested by mathjax, maybe...
     preview.innerHTML = '';
     mdContent = content;
     renderUI();
