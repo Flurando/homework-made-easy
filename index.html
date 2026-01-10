@@ -25,10 +25,10 @@
       <button id="themeToggleBtn" title="Toggle Light/Dark Theme">Light</button> <!-- Theme toggle button -->
       <button id="previewBtn" title="show markdown preview as innerHTML">Preview</button> <!-- Preview toggle button -->
       <button id="exportPDF" title="download rendered preview region as PDF">Download</button> <!-- Export as PDF button -->
-      <button id="saveFileAs" title="save current markdown to local PouchDB"></button> <!-- Cache markdown file button -->
-      <button id="openFileAs" title="read a file from local PouchDB"></button> <!-- Retrieve markdown cache button -->
-      <button id="syncFromRemote" title="sync local PouchDB with remote CouchDB"></button> <!-- Push local database change button -->
-      <button id="syncToRemote" title="sync remote CouchDB with local PouchDB"></button> <!-- Pull remote database change button -->
+      <button id="saveFileAs" title="save current markdown to local PouchDB">Save</button> <!-- Cache markdown file button -->
+      <button id="openFileAs" title="read a file from local PouchDB">Open</button> <!-- Retrieve markdown cache button -->
+      <button id="syncFromRemote" title="sync local PouchDB with remote CouchDB">Push</button> <!-- Push local database change button -->
+      <button id="syncToRemote" title="sync remote CouchDB with local PouchDB">Pull</button> <!-- Pull remote database change button -->
     </div>
 
     <!-- Main Application Area: Contains Sidebar and Main Content Side-by-Side -->
@@ -55,6 +55,9 @@
           <!-- Editor Pane: Contains the textarea and status bar -->
           <div id="editorContainer">
             <!-- The main Markdown text editing area -->
+	    <div id="infoBar">
+              <span id="fileName">untitled</span>
+            </div>
             <textarea id="editor" spellcheck="false"></textarea>
             <!-- Status Bar: Shows word and character counts -->
             <div id="statusBar">

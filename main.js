@@ -351,10 +351,20 @@ function toggleTheme() {
     saveStateToLocalStorage(); // Persist theme preference
 }
 
+// --- Local Database Persistence ---
+// similar to local storage, but not automatically synced, requiring manual care.
+function updateLocalDB() {
+}
+function readFromLocalDB() {
+}
+function pushToRemoteDB() {
+}
+function pullFromRemoteDB() {
+}
 
 // --- Local Storage Persistence ---
 // Key used to store the application state in browser's localStorage
-const LS_KEY = 'browserMarkdownEditorState_randomize_custom_edition_v1'; // Increment version if state structure changes significantly
+const LS_KEY = 'homeworkMadeEasy_state_v1'; // Increment version if state structure changes significantly
 
 /**
  * Saves the current application state (notes, active note ID, UI settings)
