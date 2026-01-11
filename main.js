@@ -442,6 +442,11 @@ async function readFromLocalDB() {
 	    updatePreview(); // we need to mannually update here, as normal update is triggerred by input of the textarea.
 	} catch (err) {
 	    console.error('An error occurred while opening the document:', err);
+	    if (err.name === 'not_found') {
+		alert('specified filename not found');
+	    } else {
+		alert('unknown error occurred while opening the document, see console for details');
+	    }
 	}
     }
 }
