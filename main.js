@@ -7,6 +7,7 @@ const themeToggleBtn = document.getElementById('themeToggleBtn'); // Theme toggl
 const container = document.querySelector('.container'); // Container holding editor/preview
 const editorContainer = document.getElementById('editorContainer'); // Div containing editor + status bar
 const editorToolbar = document.getElementById('editorToolbar'); // Toolbar above the editor
+const remoteDBSpan = document.getElementById('remoteDB'); // Span in info bar for remote database address
 const fileNameSpan = document.getElementById('fileName'); // Span in info bar for file name
 const wordCountSpan = document.getElementById('wordCount'); // Span in status bar for word count
 const charCountSpan = document.getElementById('charCount'); // Span in status bar for char count
@@ -25,6 +26,7 @@ let mdContent = ""; // the markdown content
 let reader = new commonmark.Parser();
 let writer = new commonmark.HtmlRenderer();
 let promptResult = ""; // store the return value from prompt(), of course this is bad practice to keep this as global variable, I just want to skip the "let" everywhere I use prompt().
+let remoteDBAddress = "-";
 
 let currentTheme = 'dark'; // Tracks the current theme ('light' or 'dark')
 let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
@@ -79,6 +81,23 @@ function renameDocQuest() {
     promptResult = prompt("Please enter new file name", defaultName);
     if (promptResult != null) {
 	fileNameSpan.textContent = promptResult;
+    } else {
+	// nothing to be done here
+    }
+}
+/**
+ * Pop out a quest to change remote CouchDB address
+ */
+function changeRemoteDBAddress() {
+    let defaultAddress = "";
+    if (remoteDBSpan.textContent === "-") {
+	defaultAddress = "";
+    } else {
+	defaultAddress = remoteDBSpan.textContent;
+    }
+    promptResult = prompt("Please enter remote CouchDB address", defaultAddress);
+    if (promptResult != null) {
+	remoteDBSpan.textContent = promptResult;
     } else {
 	// nothing to be done here
     }
@@ -421,8 +440,67 @@ async function readFromLocalDB() {
     }
 }
 function pushToRemoteDB() {
+    if (remoteDBAddress === "-") {
+	changeRemoteDBAddress();
+	return;
+    }
+    
+    // below chain call is mostly copied from official pouchdb document
+    const rep = db.replicate.to(remoteDBAddress)
+	  .on('change', function (info) {
+	      // handle change
+	  })
+	  .on('paused', function (err) {
+	      // replication paused (e.g. replication up to date, user went offline)
+	  })
+	  .on('active', function () {
+	      // replicate resumed (e.g. new changes replicating, user went back online)
+	  })
+	  .on('denied', function (err) {
+	      // a document failed to replicate (e.g. due to permissions)
+	      console.error(err);
+	      alert("push denied");
+	  })
+	  .on('complete', function (info) {
+	      // handle complete
+	      console.log(info);
+	      confirm("push completed");
+	  })
+	  .on('error', function (err) {
+	      // handle error
+	      console.error(err);
+	  });
 }
 function pullFromRemoteDB() {
+    if (remoteDBAddress === "-") {
+	changeRemoteDBAddress();
+	return;
+    }
+    
+    const rep = db.replicate.from(remoteDBAddress)
+	  .on('change', function (info) {
+	      // handle change
+	  })
+	  .on('paused', function (err) {
+	      // replication paused (e.g. replication up to date, user went offline)
+	  })
+	  .on('active', function () {
+	      // replicate resumed (e.g. new changes replicating, user went back online)
+	  })
+	  .on('denied', function (err) {
+	      // a document failed to replicate (e.g. due to permissions)
+	      console.error(err);
+	      alert("pull denied");
+	  })
+	  .on('complete', function (info) {
+	      // handle complete
+	      console.log(info);
+	      confirm("pull completed");
+	  })
+	  .on('error', function (err) {
+	      // handle error
+	      console.error(err);
+	  });
 }
 
 // --- Local Storage Persistence ---
@@ -445,6 +523,7 @@ function saveStateToLocalStorage() {
     const state = {
 	fileName: fileName,
         mdContent: mdContent,
+	remoteDBAddress: remoteDBAddress,
         // Persist editor/preview pane split ratio
         editorPanePercent: parseFloat(editorContainer.style.flexBasis) || 50,
         currentTheme: currentTheme // Selected theme
@@ -475,6 +554,7 @@ function loadStateFromLocalStorage() {
             const state = JSON.parse(savedState); // Parse the JSON string
 	    fileName = state.fileName || "untitled";
 	    mdContent = state.mdContent || "";
+	    remoteDBAddress = state.remoteDBAddress || "-";
             currentTheme = state.currentTheme || 'dark';
             applyTheme(currentTheme); // Apply the loaded theme
 
@@ -483,6 +563,8 @@ function loadStateFromLocalStorage() {
             editorContainer.style.flexBasis = `${editorPercent}%`;
             preview.style.flexBasis = `${100 - editorPercent}%`;
 
+	    remoteDBSpan.textContent = remoteDBAddress;
+	    fileNameSpan.textContent = fileName;
             editor.value = mdContent;
 
             // Perform initial UI rendering based on loaded state
