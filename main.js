@@ -24,6 +24,7 @@ const db = new PouchDB('default'); // our PouchDB instance
 let mdContent = ""; // the markdown content
 let reader = new commonmark.Parser();
 let writer = new commonmark.HtmlRenderer();
+let promptResult = ""; // store the return value from prompt()
 
 let currentTheme = 'dark'; // Tracks the current theme ('light' or 'dark')
 let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
@@ -69,7 +70,18 @@ function updateStatusBar() {
  * Pop out a quest to rename current file
  */
 function renameDocQuest() {
-    // 
+    let defaultName = "untitled";
+    if (fileNameSpan.textContent === "untitled") {
+	defaultName = "";
+    } else {
+	defaultName = fileNameSpan.textContent;
+    }
+    promptResult = prompt("Please enter new file name", defaultName);
+    if (promptResult != null) {
+	fileNameSpan.textContent = promptResult;
+    } else {
+	// nothing to be done here
+    }
 }
 
 // --- UI Rendering Functions ---
@@ -363,6 +375,12 @@ function toggleTheme() {
 function updateLocalDB() {
     // save current editor.value as content to pouchDB along with the fileNameSpan.textContent as name
     // if fileNameSpan.textContent is untitled, pop out a notification to rename it
+    if (fileNameSpan.textContent === "untitled") {
+	renameDocQuest();
+	return;
+    }
+
+    
 }
 function readFromLocalDB() {
     // 
@@ -387,7 +405,7 @@ function saveStateToLocalStorage() {
         contentChanged = true;
     }
 
-    let fileName = (fileNameSpan.textContent === "untitled") ? renameDocQuest() : fileNameSpan.textContent;
+    let fileName = fileNameSpan.textContent;
     // Construct the state object to save
     const state = {
 	fileName: fileName,
@@ -507,6 +525,8 @@ function downloadAsPDF(event) {
 // Assign functions to UI element events
 
 // Editor Events
+fileNameSpan.addEventListener('click', renameDocQuest);
+
 editor.addEventListener('input', () => { // Fired when content changes
     updatePreview(); // Update Markdown preview
     updateStatusBar(); // Update word/char counts
