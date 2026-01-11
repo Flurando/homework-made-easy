@@ -416,7 +416,6 @@ async function updateLocalDB() {
 	if (err.name === 'not_found') {
 	    const newDoc = {
 		_id: fileNameSpan.textContent,
-		_rev: doc._rev,
 		name: fileNameSpan.textContent,
 		content: editor.value
 	    };
@@ -689,6 +688,12 @@ previewBtn.addEventListener('click', togglePreview);
 // Export (to PDF) Button (in controls)
 exportPDF.addEventListener('click', downloadAsPDF);
 
+// PouchDB/CouchDB interaction button (in controls)
+saveFileAs.addEventListener('click', updateLocalDB);
+openFileAs.addEventListener('click', readFromLocalDB);
+syncFromRemote.addEventListener('click', pushToRemoteDB);
+syncToRemote.addEventListener('click', pullFromRemoteDB);
+
 // Window Events
 window.addEventListener('beforeunload', (event) => {
     // Ensure latest state is saved before potentially showing the prompt
@@ -712,4 +717,4 @@ loadStateFromLocalStorage();
 // Ensure the theme is applied correctly based on the loaded state
 // (applyTheme is called within loadStateFromLocalStorage)
 
-console.log("Browser Markdown Editor Initialized.");
+console.log("Homework Made Easy Initialized.");
