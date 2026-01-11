@@ -642,6 +642,7 @@ function downloadAsPDF(event) {
 // Assign functions to UI element events
 
 // Editor Events
+remoteDBSpan.addEventListener('click', changeDBAddress);
 fileNameSpan.addEventListener('click', renameDocQuest);
 
 editor.addEventListener('input', () => { // Fired when content changes
