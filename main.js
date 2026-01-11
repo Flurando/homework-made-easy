@@ -372,7 +372,8 @@ function toggleTheme() {
 
 // --- Local Database Persistence ---
 // similar to local storage, but not automatically synced, requiring manual care.
-function updateLocalDB() {
+// here I guess it is bad idea to use async/await here as we change variables without using mutex nor any equivalence, but I have not find any way to fix so let's just leave them here until bug really appears.
+async function updateLocalDB() {
     // save current editor.value as content to pouchDB along with the fileNameSpan.textContent as name
     // if fileNameSpan.textContent is untitled, pop out a notification to rename it
     if (fileNameSpan.textContent === "untitled") {
@@ -380,7 +381,32 @@ function updateLocalDB() {
 	return;
     }
 
-    
+    // if doc is stored already, we update it, else, we add a new doc
+    // note that I store the latest content instead of indexDB cache because that is just a backup for inconsistent modifications.
+    try {
+	const doc = await db.get(fileNameSpan.textContent);
+	const newDoc = {
+	    _id: fileNameSpan.textContent,
+	    _rev: doc._rev,
+	    name: fileNameSpan.textContent,
+	    content: editor.value
+	}
+	await db.put(newDoc);
+	console.log('Document updated to ', newDoc);
+    } catch (err) {
+	if (err.name === 'not_found') {
+	    const newDoc = {
+		_id: fileNameSpan.textContent,
+		_rev: doc._rev,
+		name: fileNameSpan.textContent,
+		content: editor.value
+	    };
+	    await db.put(newDoc);
+	    console.log('Document created as ', newDoc);
+	} else {
+	    console.error('An error occurred while saving the document:', err);
+	}
+    }
 }
 function readFromLocalDB() {
     // 
