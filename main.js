@@ -4,6 +4,7 @@ const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
 const previewBtn = document.getElementById('previewBtn'); // show preview block or not
 const themeToggleBtn = document.getElementById('themeToggleBtn'); // Theme toggle in controls
+const newBtn = document.getElementById('newBtn'); // New document
 const container = document.querySelector('.container'); // Container holding editor/preview
 const editorContainer = document.getElementById('editorContainer'); // Div containing editor + status bar
 const editorToolbar = document.getElementById('editorToolbar'); // Toolbar above the editor
@@ -118,16 +119,19 @@ function renderUI() {
 
 /**
  * Adds a new note
- * Generates a unique name if none is provided.
- * @param {string|null} [name=null] - The desired name for the note. If null, generates "Untitled X".
- * @param {string} [content=''] - The initial content for the note.
- * @returns {number} The ID of the newly created note.
  */
 function addNote(content = '') {
     editor.value = content;
     updatePreview();
     renderUI();
     saveStateToLocalStorage();
+}
+
+function newNote() {
+    if (confirm("Do you really want to create a new note?\nEverything not saved mannually would be lost!")) {
+	fileNameSpan.textContent = "untitled";
+	addNote('');
+    }
 }
 
 function togglePreview() {
@@ -687,6 +691,9 @@ themeToggleBtn.addEventListener('click', toggleTheme);
 
 // Preview Toggle Button (in controls)
 previewBtn.addEventListener('click', togglePreview);
+
+// New Document Button (in controls)
+newBtn.addEventListener('click', newNote);
 
 // Export (to PDF) Button (in controls)
 exportPDF.addEventListener('click', downloadAsPDF);
