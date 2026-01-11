@@ -24,7 +24,7 @@ const db = new PouchDB('default'); // our PouchDB instance
 let mdContent = ""; // the markdown content
 let reader = new commonmark.Parser();
 let writer = new commonmark.HtmlRenderer();
-let promptResult = ""; // store the return value from prompt()
+let promptResult = ""; // store the return value from prompt(), of course this is bad practice to keep this as global variable, I just want to skip the "let" everywhere I use prompt().
 
 let currentTheme = 'dark'; // Tracks the current theme ('light' or 'dark')
 let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
