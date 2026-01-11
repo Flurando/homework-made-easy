@@ -397,7 +397,6 @@ async function updateLocalDB() {
     // if fileNameSpan.textContent is untitled, pop out a notification to rename it
     if (fileNameSpan.textContent === "untitled") {
 	renameDocQuest();
-	return;
     }
 
     // if doc is stored already, we update it, else, we add a new doc
