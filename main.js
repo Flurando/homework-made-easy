@@ -412,6 +412,7 @@ async function updateLocalDB() {
 	}
 	await db.put(newDoc);
 	console.log('Document updated to ', newDoc);
+	confirm('Document has been updated!');
     } catch (err) {
 	if (err.name === 'not_found') {
 	    const newDoc = {
@@ -421,8 +422,10 @@ async function updateLocalDB() {
 	    };
 	    await db.put(newDoc);
 	    console.log('Document created as ', newDoc);
+	    confirm('Document has been created!');
 	} else {
 	    console.error('An error occurred while saving the document:', err);
+	    alert('error occuring when saving, see console for error.');
 	}
     }
 }
@@ -433,6 +436,7 @@ async function readFromLocalDB() {
 	    const doc = await db.get(promptResult);
 	    fileNameSpan.textContent = doc.name;
 	    editor.value = doc.content;
+	    updatePreview(); // we need to mannually update here, as normal update is triggerred by input of the textarea.
 	} catch (err) {
 	    console.error('An error occurred while opening the document:', err);
 	}
