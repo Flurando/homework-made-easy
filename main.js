@@ -408,8 +408,17 @@ async function updateLocalDB() {
 	}
     }
 }
-function readFromLocalDB() {
-    // 
+async function readFromLocalDB() {
+    promptResult = prompt("Enter the filename to retrieve from PouchDB");
+    if (promptResult != null) {
+	try {
+	    const doc = await db.get(promptResult);
+	    fileNameSpan.textContent = doc.name;
+	    editor.value = doc.content;
+	} catch (err) {
+	    console.error('An error occurred while opening the document:', err);
+	}
+    }
 }
 function pushToRemoteDB() {
 }
