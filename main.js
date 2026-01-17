@@ -402,6 +402,9 @@ async function updateLocalDB() {
     if (fileNameSpan.textContent === "untitled") {
 	renameDocQuest();
     }
+    if (fileNameSpan.textContent === "untitled") {
+	return;
+    }
 
     // if doc is stored already, we update it, else, we add a new doc
     // note that I store the latest content instead of indexDB cache because that is just a backup for inconsistent modifications.
@@ -454,6 +457,9 @@ function pushToRemoteDB() {
     if (remoteDBAddress === "-") {
 	changeRemoteDBAddress();
     }
+    if (remoteDBAddress === "-") {
+	return;
+    }
     
     // below chain call is mostly copied from official pouchdb document
     const rep = db.replicate.to(remoteDBAddress)
@@ -484,6 +490,9 @@ function pushToRemoteDB() {
 function pullFromRemoteDB() {
     if (remoteDBAddress === "-") {
 	changeRemoteDBAddress();
+    }
+    if (remoteDBAddress === "-") {
+	return;
     }
     
     const rep = db.replicate.from(remoteDBAddress)
