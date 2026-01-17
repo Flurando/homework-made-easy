@@ -453,7 +453,6 @@ async function readFromLocalDB() {
 function pushToRemoteDB() {
     if (remoteDBAddress === "-") {
 	changeRemoteDBAddress();
-	return;
     }
     
     // below chain call is mostly copied from official pouchdb document
@@ -485,7 +484,6 @@ function pushToRemoteDB() {
 function pullFromRemoteDB() {
     if (remoteDBAddress === "-") {
 	changeRemoteDBAddress();
-	return;
     }
     
     const rep = db.replicate.from(remoteDBAddress)
