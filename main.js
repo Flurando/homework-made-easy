@@ -443,6 +443,7 @@ async function readFromLocalDB() {
 	    fileNameSpan.textContent = doc.name;
 	    editor.value = doc.content;
 	    updatePreview(); // we need to mannually update here, as normal update is triggerred by input of the textarea.
+	    renderUI(); // same reason as above
 	} catch (err) {
 	    console.error('An error occurred while opening the document:', err);
 	    if (err.name === 'not_found') {
