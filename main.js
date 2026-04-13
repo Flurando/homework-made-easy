@@ -8,6 +8,7 @@ const newBtn = document.getElementById('newBtn'); // New document
 const container = document.querySelector('.container'); // Container holding editor/preview
 const editorContainer = document.getElementById('editorContainer'); // Div containing editor + status bar
 const editorToolbar = document.getElementById('editorToolbar'); // Toolbar above the editor
+const previewUpdateModeSpan = document.getElementById('previewUpdateMode'); // Span in info bar for preview update mode
 const remoteDBSpan = document.getElementById('remoteDB'); // Span in info bar for remote database address
 const fileNameSpan = document.getElementById('fileName'); // Span in info bar for file name
 const wordCountSpan = document.getElementById('wordCount'); // Span in status bar for word count
@@ -17,6 +18,7 @@ const saveFileAs = document.getElementById('saveFileAs'); // save current markdo
 const openFileAs = document.getElementById('openFileAs'); // read a file from local PouchDB
 const syncFromRemote = document.getElementById('syncFromRemote'); // sync local PouchDB with remote CouchDB
 const syncToRemote = document.getElementById('syncToRemote'); // sync remote CouchDB with local PouchDB
+const previewManualUpdate = document.getElementById('previewManualUpdate'); // update preview mannually
 
 // --- Databse References ---
 const db = new PouchDB('default'); // our PouchDB instance
@@ -31,6 +33,9 @@ let remoteDBAddress = "-";
 
 let currentTheme = 'dark'; // Tracks the current theme ('light' or 'dark')
 let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
+
+let autoUpdatePreview = true; // whether or not we should automatically update preview
+let previewShouldChange = false; // whether preview should be changed mannually
 
 // --- Core Helper Functions ---
 /**
@@ -522,6 +527,22 @@ function pullFromRemoteDB() {
 	  });
 }
 
+// --- Preview Update Logic ---
+function previewUpdateLogic() {
+    if (autoUpdatePreview) {
+       autoUpdatePreview = false;
+       previewUpdateModeSpan.textContent = "manual";
+    } else {
+       if (previewShouldChange) {
+           updatePreview();
+           previewShouldChange = false;
+       } else {
+           autoUpdatePreview = true;
+           previewUpdateModeSpan.textContent = "auto";
+       }
+    }
+}
+
 // --- Local Storage Persistence ---
 // Key used to store the application state in browser's localStorage
 const LS_KEY = 'homeworkMadeEasy_state_v1'; // Increment version if state structure changes significantly
@@ -665,7 +686,7 @@ remoteDBSpan.addEventListener('click', changeRemoteDBAddress);
 fileNameSpan.addEventListener('click', renameDocQuest);
 
 editor.addEventListener('input', () => { // Fired when content changes
-    updatePreview(); // Update Markdown preview
+    if (autoUpdatePreview) {updatePreview(); previewShouldChange = false;} else {previewShouldChange = true;}; // Update Markdown preview
     updateStatusBar(); // Update word/char counts
     // Debounced auto-save to localStorage after a short delay of inactivity
     clearTimeout(autoSaveTimer); // Clear previous timer
@@ -716,6 +737,9 @@ saveFileAs.addEventListener('click', updateLocalDB);
 openFileAs.addEventListener('click', readFromLocalDB);
 syncFromRemote.addEventListener('click', pushToRemoteDB);
 syncToRemote.addEventListener('click', pullFromRemoteDB);
+
+// Preview Update Logic (in controls)
+previewManualUpdate.addEventListener('click', previewUpdateLogic);
 
 // Window Events
 window.addEventListener('beforeunload', (event) => {

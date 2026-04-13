@@ -30,6 +30,7 @@
       <button id="openFileAs" title="read a file from local PouchDB">Open</button> <!-- Retrieve markdown cache button -->
       <button id="syncFromRemote" title="sync local PouchDB with remote CouchDB">Push</button> <!-- Push local database change button -->
       <button id="syncToRemote" title="sync remote CouchDB with local PouchDB">Pull</button> <!-- Pull remote database change button -->
+      <button id="previewManualUpdate" title="preview manual update">Update</button> <!-- Manually update preview zone button -->
     </div>
 
     <!-- Main Application Area: Contains Sidebar and Main Content Side-by-Side -->
@@ -57,7 +58,7 @@
           <div id="editorContainer">
             <!-- The main Markdown text editing area -->
 	    <div id="infoBar">
-              <p>remoteDB: <span id="remoteDB">-</span> | filename: <span id="fileName">untitled</span></p>
+              <p>preview update mode: <span id="previewUpdateMode">auto</span> | remoteDB: <span id="remoteDB">-</span> | filename: <span id="fileName">untitled</span></p>
             </div>
             <textarea id="editor" spellcheck="false"></textarea>
             <!-- Status Bar: Shows word and character counts -->
