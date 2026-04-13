@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homework Made Easy</title>
     <link rel="stylesheet" href="style.css">
-    <script src="commonmark.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- html2pdf would never be bundled in this project, unlike permissive apache licensed MathJax, this is distributed under MIT, so I could not distribute it within this AGPL project without a reasonable amount of authoring or at least acknowledged by original authors. However, you are still encouraged to host this locally for better privacy.-->
+    <script src="js/commonmark.js"></script>
+    <script src="js/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="></script>
     <script>
       MathJax = {
 	  tex: {
@@ -15,8 +15,8 @@
 	  processHtmlClass: 'mathjax_process'
       };
     </script>
-    <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script><!-- though I just use cdn for convenience here, you are encouraged to use a local version for privacy.-->
-    <script src="https://cdn.jsdelivr.net/npm/pouchdb@9.0.0/dist/pouchdb.min.js"></script><!-- same as above -->
+    <script id="MathJax-script" src="js/MathJax-4.1.1/tex-mml-chtml.js"></script>
+    <script src="js/pouchdb.min.js"></script>
   </head>
   <body>
     <!-- Top Control Bar: Contains main actions like menu, open, close, switch, search, theme -->
@@ -70,7 +70,7 @@
         </div>
       </div>
     </div>
-    <script src="main.js"></script>
+    <script src="js/main.js"></script>
     <noscript>
       <p>javascript is required for preview and buttons to work, otherwise you could play with a plain textarea</p>
       <p>sorry for inconvenience</p>
