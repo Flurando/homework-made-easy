@@ -280,7 +280,7 @@ function handleEditorKeyDown(event) {
         // Find the start of the current line
         const currentLineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
         // Get the content of the current line up to the cursor
-        const currentLine = editor.value.substring(currenMathJax.typesettLineStart, start);
+        const currentLine = editor.value.substring(currentLineStart, start);
         const trimmedLine = currentLine.trimStart(); // Line content without leading whitespace
 
         let listPrefix = null; // Stores the list marker and indentation (e.g., "  - ")

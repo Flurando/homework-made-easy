@@ -9,13 +9,22 @@
     <script src="js/html2pdf.bundle.min.js"</script>
     <script>
       MathJax = {
+	  loader: {
+	      paths: {
+		  mathjax: '/js/mathjax/code',
+		  fonts: '/js/mathjax/font'
+	      }
+	  },
 	  tex: {
 	      inlineMath: {'[+]': [['$', '$']]}
 	  },
-	  processHtmlClass: 'mathjax_process'
+	  processHtmlClass: 'mathjax_process',
+	  output: {
+	      font: 'mathjax-newcm'
+	  }
       };
     </script>
-    <script id="MathJax-script" src="js/MathJax-4.1.1/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" src="js/mathjax/code/tex-chtml.js"></script>
     <script src="js/pouchdb.min.js"></script>
   </head>
   <body>
