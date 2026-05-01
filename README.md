@@ -1,5 +1,7 @@
 # homework-made-easy
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 want to write homework anywhere, as long as you got a browser and internet connection?
@@ -29,6 +31,8 @@ But due to the poor design of re-render the whole content every input, you might
 
 In that case I suggest you to divide your homework in parts, or submit a patch for lazy rendering, which I don't really know how to implement.
 
+Current walkaround is a manual update switch.
+
 ## PDF exporting
 
 Most assignments from academies in world, as I know, do not accept pure markdown as submittion format.
@@ -39,13 +43,11 @@ Currently using html2pdf.js with default options, get in touch with me if you ha
 
 ## Data sync-ing
 
-Not implemented yet, but I put it here because this must be done before this project could be considerred usable by me myself.
-
-Anyway, my initial point of starting this fork is doing homework everywhere, not being able to sync across browsers or devices would make this meaningless.
-
 Actually I planned to go serverless p2p with webrtc tech originally, but that would require my iphone to have yggdrasil network or equivalences joined or my laptop behind several CGNATs to get a public ipv4 or ipv6 address, both being impossible these days.
 
 So I fall back to the legacy server&client mode, acceptable as this is just a project for stupid schoolworks, with my attention drawn towards the excellent PouchDB and CouchDB.
+
+Just let remote be like ![this](https://<username>:<password>@<domain>:<port>/<db-name> "an example URL showing what a valid remote is like").
 
 # Drawbacks
 
@@ -63,6 +65,8 @@ So I fall back to the legacy server&client mode, acceptable as this is just a pr
    2. when you open, prompted filename along with corresponding cache in local PouchDB covers current filename in infobar and the markdown content, unsaved works? Lost forever!
    3. when you push, local PouchDB is pushed to remote CouchDB.
    4. when you pull, local PouchDB is pulled from remote CouchDB.
+   
+   however, you might not want to SAVE frequently due to PouchDB/CouchDB living on snapshots.
 3. only basic functionalities coming to database
    
    guess what, in fact, PouchDB and CouchDB store all the history files even when you tell it to delete! So actually, as long as you don't clear the indexDB, nothing saved would ever be lost! However, relevant functionality is not implemented here, do it if you have time and effort.
