@@ -30,6 +30,7 @@ let reader = new commonmark.Parser();
 let writer = new commonmark.HtmlRenderer();
 let promptResult = ""; // store the return value from prompt(), of course this is bad practice to keep this as global variable, I just want to skip the "let" everywhere I use prompt().
 let remoteDBAddress = "-";
+let remoteDB = null;
 
 let currentTheme = 'dark'; // Tracks the current theme ('light' or 'dark')
 let autoSaveTimer = null; // Timer ID for debouncing auto-save to localStorage
@@ -91,6 +92,7 @@ function renameDocQuest() {
 	// nothing to be done here
     }
 }
+
 /**
  * Pop out a quest to change remote CouchDB address
  */
@@ -99,15 +101,43 @@ function changeRemoteDBAddress() {
     if (remoteDBSpan.textContent === "-") {
 	defaultAddress = "";
     } else {
-	defaultAddress = remoteDBSpan.textContent;
+	defaultAddress = remoteDBAddress;
     }
     promptResult = prompt("Please enter remote CouchDB address", defaultAddress);
     if (promptResult != null) {
-	remoteDBSpan.textContent = promptResult;
-    } else {
-	// nothing to be done here
+	remoteDBAddress = promptResult;
+	remoteDBSpan.textContent = remoteDBAddress.replace(`${new URL(remoteDBAddress).username}:${new URL(remoteDBAddress).password}@`, '*:*@');
     }
-    remoteDBAddress = defaultAddress;
+    if (remoteDBSpan.textContent != "-") {
+	remoteDB = remoteDBFromURL(remoteDBAddress);
+    }
+}
+
+/**
+ * remote PouchDB from address
+ */
+function makeAuthFetchFromUrl(credsUrl) {
+    const parsed = new URL(credsUrl);
+    const username = decodeURIComponent(parsed.username || '');
+    const password = decodeURIComponent(parsed.password || '');
+    const auth = username || password ? 'Basic ' + btoa(`${username}:${password}`) : null;
+
+    const base = parsed.origin + parsed.pathname.replace(/\/$/, '');
+
+    return (url, opts = {}) => {
+	const reqUrl = new URL(url, base + '/');
+	opts = opts || {};
+	opts.headers = new Headers(opts.headers || {});
+	if (auth) opts.headers.set('Authorization', auth);
+	opts.credentials = 'include';
+	return fetch(reqUrl.toString(), opts);
+    };
+}
+function remoteDBFromURL(remoteUrl) {
+    const myFetch = makeAuthFetchFromUrl(remoteUrl);
+    const remoteUrlNoCreds = remoteUrl.replace(`${new URL(remoteUrl).username}:${new URL(remoteUrl).password}@`, '');
+    const remote = new PouchDB(remoteUrlNoCreds, { fetch: myFetch });
+    return remote;
 }
 
 // --- UI Rendering Functions ---
@@ -461,15 +491,15 @@ async function readFromLocalDB() {
     }
 }
 function pushToRemoteDB() {
-    if (remoteDBAddress === "-") {
+    if (remoteDBSpan.textContent === "-") {
 	changeRemoteDBAddress();
     }
-    if (remoteDBAddress === "-") {
+    if (remoteDBSpan.textContent === "-") {
 	return;
     }
     
     // below chain call is mostly copied from official pouchdb document
-    const rep = db.replicate.to(remoteDBAddress)
+    const rep = db.replicate.to(remoteDB)
 	  .on('change', function (info) {
 	      // handle change
 	  })
@@ -495,14 +525,14 @@ function pushToRemoteDB() {
 	  });
 }
 function pullFromRemoteDB() {
-    if (remoteDBAddress === "-") {
+    if (remoteDBSpan.textContent === "-") {
 	changeRemoteDBAddress();
     }
-    if (remoteDBAddress === "-") {
+    if (remoteDBSpan.textContent === "-") {
 	return;
     }
     
-    const rep = db.replicate.from(remoteDBAddress)
+    const rep = db.replicate.from(remoteDB)
 	  .on('change', function (info) {
 	      // handle change
 	  })
@@ -604,7 +634,10 @@ function loadStateFromLocalStorage() {
             editorContainer.style.flexBasis = `${editorPercent}%`;
             preview.style.flexBasis = `${100 - editorPercent}%`;
 
-	    remoteDBSpan.textContent = remoteDBAddress;
+	    remoteDBSpan.textContent = remoteDBAddress.replace(`${new URL(remoteDBAddress).username}:${new URL(remoteDBAddress).password}@`, '*:*@');
+	    if (remoteDBSpan.textContent != "-") {
+		changeRemoteDBAddress();
+	    }
 	    fileNameSpan.textContent = fileName;
             editor.value = mdContent;
 
