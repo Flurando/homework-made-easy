@@ -634,9 +634,6 @@ function loadStateFromLocalStorage() {
             preview.style.flexBasis = `${100 - editorPercent}%`;
 
 	    try {remoteDBSpan.textContent = remoteDBAddress.replace(`${new URL(remoteDBAddress).username}:${new URL(remoteDBAddress).password}@`, '*:*@');} catch (e) {remoteDBSpan.textContent = "-";}
-            if (remoteDBSpan.textContent != "-") {
-		changeRemoteDBAddress();
-            }
 	    fileNameSpan.textContent = fileName;
             editor.value = mdContent;
 
