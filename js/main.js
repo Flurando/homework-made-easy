@@ -107,6 +107,7 @@ function changeRemoteDBAddress() {
     } else {
 	// nothing to be done here
     }
+    remoteDBAddress = defaultAddress;
 }
 
 // --- UI Rendering Functions ---
